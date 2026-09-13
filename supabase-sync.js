@@ -2,7 +2,6 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const SUPABASE_URL = 'https://mejbqfkwsabronypsulr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ChLKVj9ET3XSjWsLKhgMFA_Ct_JiVC-';
-const BINDER_URL = 'https://dusty-road.github.io/home-management-binder/';
 const INTERNAL_PREFIX = 'binderSync:';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -152,7 +151,6 @@ async function requestMagicLink() {
     email: email.trim(),
     options: {
       shouldCreateUser: true,
-      emailRedirectTo: BINDER_URL,
     },
   });
 
