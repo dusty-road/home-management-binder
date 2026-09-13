@@ -1,0 +1,31 @@
+name: Patch Supabase sync draft
+on:
+  push:
+    branches: [supabase-sync-draft]
+    paths:
+      - '.github/workflows/patch-supabase-draft.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: supabase-sync-draft
+      - name: Add sync loader without changing layout
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          tag='<script type="module" src="./supabase-sync.js"></script>'
+          if tag not in s:
+              s=s.replace('</body></html>', tag+'\n</body></html>')
+          p.write_text(s)
+          PY
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Add Supabase sync loader to draft
+          branch: supabase-sync-draft
+          file_pattern: index.html
