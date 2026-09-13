@@ -1,0 +1,32 @@
+name: Rebuild Binder
+on:
+  push:
+    paths:
+      - '.binder-payload/**'
+permissions:
+  contents: write
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild index
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          files=[Path(f'.binder-payload/chunk{i}.txt') for i in range(1,6)]
+          if not all(p.exists() for p in files):
+              print('Waiting for all payload chunks')
+              raise SystemExit(0)
+          s=''.join(p.read_text().strip() for p in files)
+          loader='''<!doctype html>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>Home Management Binder</title>\n<script>\n(async()=>{\nconst s="'''+s+'''";\nconst b=Uint8Array.from(atob(s),c=>c.charCodeAt(0));\nconst ds=new DecompressionStream("gzip");\nconst html=await new Response(new Blob([b]).stream().pipeThrough(ds)).text();\ndocument.open();document.write(html);document.close();\n})().catch(e=>document.body.innerHTML="<p style='font-family:Arial;padding:30px'>Unable to load the binder. Please refresh this page.</p>");\n</script>'''
+          Path('index.html').write_text(loader)
+          PY
+      - name: Commit rebuilt binder
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Update home management binder"
+          git push
