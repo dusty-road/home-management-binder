@@ -15,7 +15,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          files=[Path(f'.binder-payload/part{i:02d}.txt') for i in range(1,10)]
+          files=[Path(f'.binder-payload/part{i:02d}.txt') for i in range(1,21)]
           if not all(p.exists() for p in files):
               print('Waiting for all binder parts')
               raise SystemExit(0)
