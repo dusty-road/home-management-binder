@@ -74,9 +74,8 @@ main{padding:22px}.page{display:none}.page.active{display:block}.title{font-size
     <input id="birthdayName" placeholder="Name"><input id="birthdayDay" type="number" min="1" max="31" placeholder="Day"><select id="birthdayMonth"></select><input id="birthdayYear" type="number" min="1900" max="2100" placeholder="Year"><button class="action" onclick="addBirthday()">Add</button>
   </div>
 </div>
-<div class="card big accent-red"><h2>Needs Attention</h2><p class="placeholder">Appointments and urgent tasks will go here.</p></div>
-<div class="card side accent-green"><h2>Money to Protect</h2><div class="money">$0</div><p class="placeholder">Upcoming bills.</p></div>
-<div class="card half accent-blue"><h2>Coming Up</h2><p class="placeholder">Next few days.</p></div>
+<div class="card big accent-red"><h2>Needs Attention</h2><div id="needsAttentionList"></div><div class="controls"><input id="needsAttentionInput" placeholder="Add appointment or urgent task"><button class="action" onclick="addNeedsAttention()">Add</button></div></div>
+<div class="card half accent-blue"><h2>Coming Up</h2><div id="comingUpList"></div><div class="controls"><input id="comingUpInput" placeholder="Add something coming up"><button class="action" onclick="addComingUp()">Add</button></div></div>
 <div class="card half grocery accent-yellow"><h2>🛒 Grocery List</h2><div class="shopping-section"><h4>🥦 Food & Groceries</h4><div id="groceryDashboard"></div></div><div class="shopping-section"><h4>🧽 Cleaning & Household</h4><div id="cleanDashboard"></div></div></div>
 <div class="card big accent-blue"><h2>🏪 My Costco Shopping List</h2><p class="placeholder">Costco-only items stay separate from everyday groceries.</p><div id="costcoList"></div><div class="controls"><input id="costcoInput" placeholder="Add regular Costco item"><button class="action" onclick="addCostco()">Add</button></div><button class="smallbtn" style="margin-top:10px;margin-left:0" onclick="resetCostcoTicks()">Reset ticks for new Costco shop</button></div>
 </div></section>
@@ -151,6 +150,22 @@ main{padding:22px}.page{display:none}.page.active{display:block}.title{font-size
 
 <script>
 const $=id=>document.getElementById(id);
+
+// ---------- Needs Attention + Coming Up ----------
+let needsAttentionItems=JSON.parse(localStorage.getItem('needsAttentionItems')||'[]');
+let comingUpItems=JSON.parse(localStorage.getItem('comingUpItems')||'[]');
+function renderSimpleTodayList(targetId,items,emptyText,saveFn){
+  const target=$(targetId);if(!target)return;target.innerHTML='';
+  if(!items.length){let p=document.createElement('p');p.className='placeholder';p.textContent=emptyText;target.appendChild(p);return;}
+  items.forEach((x,i)=>{let d=document.createElement('div');d.className='task'+(x.done?' done':'');d.innerHTML=`<input type="checkbox" ${x.done?'checked':''}><span></span><button class="smallbtn">×</button>`;d.querySelector('span').textContent=x.text;d.querySelector('input').onchange=e=>{x.done=e.target.checked;saveFn()};d.querySelector('button').onclick=()=>{items.splice(i,1);saveFn()};target.appendChild(d)});
+}
+function saveNeedsAttention(){localStorage.setItem('needsAttentionItems',JSON.stringify(needsAttentionItems));renderSimpleTodayList('needsAttentionList',needsAttentionItems,'Nothing urgent right now.',saveNeedsAttention)}
+function addNeedsAttention(){let input=$('needsAttentionInput');let v=(input?.value||'').trim();if(!v)return;if(!needsAttentionItems.some(x=>x.text.toLowerCase()===v.toLowerCase()))needsAttentionItems.push({text:v,done:false});if(input)input.value='';saveNeedsAttention()}
+function saveComingUp(){localStorage.setItem('comingUpItems',JSON.stringify(comingUpItems));renderSimpleTodayList('comingUpList',comingUpItems,'Nothing coming up yet.',saveComingUp)}
+function addComingUp(){let input=$('comingUpInput');let v=(input?.value||'').trim();if(!v)return;if(!comingUpItems.some(x=>x.text.toLowerCase()===v.toLowerCase()))comingUpItems.push({text:v,done:false});if(input)input.value='';saveComingUp()}
+renderSimpleTodayList('needsAttentionList',needsAttentionItems,'Nothing urgent right now.',saveNeedsAttention);
+renderSimpleTodayList('comingUpList',comingUpItems,'Nothing coming up yet.',saveComingUp);
+
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab,.page').forEach(x=>x.classList.remove('active'));t.classList.add('active');$(t.dataset.page).classList.add('active')});
 
 // ---------- Requested Today clock + Brisbane 7-day forecast ----------
@@ -262,4 +277,5 @@ function addJob(child){let name=$(child+'JobInput').value.trim(),pay=parseFloat(
 
 saveChores('james');saveChores('grace');saveRewards('james');saveRewards('grace');renderRewardProgress('james');renderRewardProgress('grace');renderJobs('james');renderJobs('grace');
 </script>
+<script type="module" src="./supabase-sync.js"></script>
 </body></html>
