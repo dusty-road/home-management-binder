@@ -15,13 +15,12 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          files=[Path(f'.binder-payload/chunk{i:02d}.txt') for i in range(1,11)]
+          files=[Path(f'.binder-payload/part{i:02d}.txt') for i in range(1,21)]
           if not all(p.exists() for p in files):
-              print('Waiting for all compressed binder chunks')
+              print('Waiting for all binder parts')
               raise SystemExit(0)
-          s=''.join(p.read_text().strip() for p in files)
-          loader='''<!doctype html>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>Home Management Binder</title>\n<script>\n(async()=>{\nconst s="'''+s+'''";\nconst b=Uint8Array.from(atob(s),c=>c.charCodeAt(0));\nconst ds=new DecompressionStream("gzip");\nconst html=await new Response(new Blob([b]).stream().pipeThrough(ds)).text();\ndocument.open();document.write(html);document.close();\n})().catch(e=>document.body.innerHTML="<p style='font-family:Arial;padding:30px'>Unable to load the binder. Please refresh this page.</p>");\n</script>'''
-          Path('index.html').write_text(loader)
+          html=''.join(p.read_text() for p in files)
+          Path('index.html').write_text(html)
           PY
       - name: Commit rebuilt binder
         run: |
