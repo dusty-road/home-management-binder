@@ -12,9 +12,18 @@
     let changed=false;
     (rewards[child]||[]).forEach(r=>{
       if(!r||r.type==='__claim__')return;
-      if(r.type==='large'){r.type='regular';changed=true}
-      else if(r.type==='regular'&&!r._rewardTierMigrated){r.type='mini';changed=true}
-      if(r.type==='mini'||r.type==='regular'||r.type==='special')r._rewardTierMigrated=true;
+      if(r.type==='large'){
+        r.type='regular';
+        r._rewardTierMigrated=true;
+        changed=true;
+      }else if(r.type==='regular'&&!r._rewardTierMigrated){
+        r.type='mini';
+        r._rewardTierMigrated=true;
+        changed=true;
+      }else if((r.type==='mini'||r.type==='special')&&!r._rewardTierMigrated){
+        r._rewardTierMigrated=true;
+        changed=true;
+      }
     });
     if(changed)localStorage.setItem(child+'Rewards',JSON.stringify(rewards[child]));
   });
@@ -39,6 +48,17 @@
     const cfg=milestoneConfig[milestone];
     return (rewards[child]||[]).filter(x=>x&&x.type===cfg.type&&x.text).map(x=>x.text);
   }
+
+  window.addReward=function(child){
+    const input=document.getElementById(child+'RewardInput');
+    const select=document.getElementById(child+'RewardType');
+    const text=(input?.value||'').trim();
+    const type=select?.value||'mini';
+    if(!text)return;
+    rewards[child].push({text,type,_rewardTierMigrated:true});
+    input.value='';
+    saveRewards(child);
+  };
 
   window.showRewardChooser=function(child,milestone){
     const target=document.getElementById(`${child}Milestone${milestone}`);
