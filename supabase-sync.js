@@ -27,6 +27,12 @@ let syncInFlight = false;
 const rawSetItem = Storage.prototype.setItem;
 const rawRemoveItem = Storage.prototype.removeItem;
 
+// Parent chore verification PIN migration: replace the old default with 9999.
+const existingParentPin = localStorage.getItem('parentPin');
+if (existingParentPin === null || existingParentPin === '1234') {
+  rawSetItem.call(localStorage, 'parentPin', '9999');
+}
+
 function isBinderKey(key) { return BINDER_KEYS.has(String(key)); }
 function readJson(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key) || '') || fallback; }
@@ -237,6 +243,9 @@ async function syncFromCloud({ reloadIfChanged = true } = {}) {
 
     const remote = row.data && typeof row.data === 'object' ? row.data : {};
     let merged = initialized ? { ...remote } : { ...local, ...remote };
+
+    // Keep every device and the cloud on the new parent PIN.
+    if (!merged.parentPin || merged.parentPin === '1234') merged.parentPin = '9999';
 
     // Unsaved edits on this device always survive a pull.
     dirty.forEach(key => {
